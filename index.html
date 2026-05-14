@@ -1,0 +1,246 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyPdf - Free Image to PDF Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PDF Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .ad-placeholder { background: #f1f5f9; border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .loader { border-top-color: #4f46e5; animation: spinner 0.6s linear infinite; }
+        @keyframes spinner { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-[#1e293b]">
+
+    <!-- Header -->
+    <nav class="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 p-2 rounded-xl shadow-lg">
+                    <i data-lucide="file-text" class="text-white w-5 h-5"></i>
+                </div>
+                <span class="text-xl font-black tracking-tighter">MyPdf</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="hidden sm:inline-block text-[10px] font-black bg-green-100 text-green-700 px-3 py-1 rounded-full uppercase">100% Free Forever</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Top Ad Slot -->
+    <div class="max-w-7xl mx-auto px-4 mt-4">
+        <div class="ad-placeholder h-24 rounded-2xl w-full">
+            <!-- Replace this div with your Google AdSense Auto-Ad or Banner Code -->
+            Google AdSense Banner (Top)
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left: PDF Builder -->
+        <div class="lg:col-span-8 space-y-6">
+            <!-- Upload Box -->
+            <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold flex items-center gap-2">
+                        <i data-lucide="upload-cloud" class="text-indigo-600"></i> 1. Upload Images
+                    </h2>
+                    <span class="text-xs font-bold text-slate-400">Max 50 images</span>
+                </div>
+                
+                <label id="drop-zone" class="relative group flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer bg-slate-50 hover:bg-white hover:border-indigo-400 transition-all">
+                    <input type="file" id="file-input" class="absolute inset-0 opacity-0 cursor-pointer" multiple accept="image/*">
+                    <div class="text-center pointer-events-none">
+                        <div class="bg-white p-4 rounded-full shadow-md inline-block mb-3 group-hover:scale-110 transition-transform">
+                            <i data-lucide="plus" class="w-6 h-6 text-indigo-600"></i>
+                        </div>
+                        <p class="font-bold text-slate-700">Click to select photos</p>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Sorting Grid -->
+            <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm min-h-[300px]">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-xl font-bold flex items-center gap-2">
+                        <i data-lucide="layout-grid" class="text-indigo-600"></i> 2. Arrange Pages
+                    </h2>
+                    <button onclick="clearAll()" class="text-xs font-bold text-red-400 hover:text-red-600">Clear All</button>
+                </div>
+                <div id="image-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    <!-- Images appear here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Settings & Ads -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+                    <i data-lucide="settings" class="text-indigo-600"></i> PDF Options
+                </h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase block mb-1">File Name</label>
+                        <input type="text" id="pdf-name" value="My_Class_PDF" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none">
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="text-sm font-bold">Page Numbers</span>
+                        <input type="checkbox" id="page-numbers" checked class="w-4 h-4 accent-indigo-600">
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase block mb-1">Watermark</label>
+                        <input type="text" id="watermark-text" placeholder="Nilu Baba" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none text-sm">
+                    </div>
+
+                    <button onclick="createPdf()" id="convert-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all active:scale-95">
+                        <i data-lucide="download" class="w-5 h-5"></i> Download PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sidebar Ad Slot -->
+            <div class="ad-placeholder h-[400px] rounded-3xl w-full">
+                Google AdSense (Vertical Sidebar)
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Ad -->
+    <div class="max-w-7xl mx-auto px-4 mb-8">
+        <div class="ad-placeholder h-32 rounded-2xl w-full">
+            Google AdSense Banner (Bottom)
+        </div>
+    </div>
+
+    <footer class="py-12 border-t border-slate-200 bg-white">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-2">
+                <div class="bg-indigo-600 p-1.5 rounded-lg"><i data-lucide="file-text" class="text-white w-4 h-4"></i></div>
+                <span class="font-black text-slate-800 uppercase tracking-tighter">MyPdf</span>
+            </div>
+            <p class="text-sm font-bold text-slate-500">Made by : <span class="text-indigo-600 font-extrabold underline decoration-indigo-200 underline-offset-4">Nilu Baba</span></p>
+            <div class="flex gap-4">
+                <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Privacy Protected • Browser-Based</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let images = [];
+        const { jsPDF } = window.jspdf;
+
+        // --- File Handling ---
+        const fileInput = document.getElementById('file-input');
+        fileInput.onchange = (e) => handleFiles(e.target.files);
+
+        function handleFiles(files) {
+            if (images.length + files.length > 50) return alert("Limit is 50 images per PDF.");
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    images.push({ id: Math.random(), src: ev.target.result });
+                    renderGrid();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('image-grid');
+            grid.innerHTML = images.map((img, i) => `
+                <div class="relative group aspect-[3/4] rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                    <img src="${img.src}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-indigo-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                        <button onclick="removeImg(${i})" class="self-end bg-red-500 text-white p-1.5 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <div class="flex items-center justify-between bg-white p-1.5 rounded-lg">
+                            <button onclick="move(${i}, -1)" ${i === 0 ? 'disabled' : ''} class="text-indigo-600 font-bold px-1">←</button>
+                            <span class="text-[10px] font-black">PG ${i+1}</span>
+                            <button onclick="move(${i}, 1)" ${i === images.length-1 ? 'disabled' : ''} class="text-indigo-600 font-bold px-1">→</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function move(idx, dir) {
+            const tmp = images[idx];
+            images[idx] = images[idx+dir];
+            images[idx+dir] = tmp;
+            renderGrid();
+        }
+
+        function removeImg(idx) {
+            images.splice(idx, 1);
+            renderGrid();
+        }
+
+        function clearAll() {
+            if(confirm("Delete all images?")) { images = []; renderGrid(); }
+        }
+
+        // --- PDF Generation ---
+        async function createPdf() {
+            if (images.length === 0) return alert("Upload images first!");
+            
+            const btn = document.getElementById('convert-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<div class="loader w-5 h-5 border-2 border-white rounded-full"></div> Processing...`;
+
+            try {
+                const docPdf = new jsPDF();
+                const wmText = document.getElementById('watermark-text').value;
+                const showNums = document.getElementById('page-numbers').checked;
+
+                for (let i = 0; i < images.length; i++) {
+                    if (i > 0) docPdf.addPage();
+                    const img = images[i];
+                    const props = docPdf.getImageProperties(img.src);
+                    const pw = docPdf.internal.pageSize.getWidth();
+                    const ph = docPdf.internal.pageSize.getHeight();
+                    const r = Math.min(pw / props.width, ph / props.height);
+                    const w = props.width * r, h = props.height * r;
+                    docPdf.addImage(img.src, 'JPEG', (pw-w)/2, (ph-h)/2, w, h);
+
+                    if (wmText) {
+                        docPdf.saveGraphicsState();
+                        docPdf.setGState(new docPdf.GState({ opacity: 0.1 }));
+                        docPdf.setFontSize(50);
+                        docPdf.setTextColor(150);
+                        docPdf.text(wmText, pw/2, ph/2, { align: 'center', angle: 45 });
+                        docPdf.restoreGraphicsState();
+                    }
+                    if (showNums) {
+                        docPdf.setFontSize(10);
+                        docPdf.setTextColor(180);
+                        docPdf.text(`${i+1} / ${images.length}`, pw-15, ph-10, { align: 'right' });
+                    }
+                }
+                docPdf.save(`${document.getElementById('pdf-name').value || 'MyPdf'}.pdf`);
+            } catch (e) {
+                alert("Error making PDF.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="download" class="w-5 h-5"></i> Download PDF`;
+                lucide.createIcons();
+            }
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
+```
